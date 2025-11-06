@@ -1,0 +1,51 @@
+.app-container {
+  text-align: center;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  background: #f8f9fc;
+  min-height: 100vh;
+}
+
+.upload-box,
+.report-box,
+.chatbot-box {
+  background: #fff;
+  margin: 20px auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 700px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+button {
+  background-color: #0078ff;
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #005edc;
+}
+
+.chat-window {
+  text-align: left;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #f4f6f9;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.loader {
+  font-size: 1.2rem;
+  color: #0078ff;
+  margin-top: 10px;
+}
