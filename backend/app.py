@@ -3,8 +3,7 @@ from flask_cors import CORS
 import os
 from pydub import AudioSegment
 import speech_recognition as sr
-import subprocess
-import ollama  # for llama model response generation
+import ollama
 
 app = Flask(__name__)
 CORS(app)
@@ -22,53 +21,90 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # 🎙️ Function: Convert + Transcribe Audio
 def transcribe_audio(audio_path):
-    print("🎧 Converting MP3 to WAV using FFmpeg...")
+    print("🎧 Converting audio to WAV using FFmpeg...")
     wav_path = os.path.splitext(audio_path)[0] + ".wav"
     AudioSegment.from_file(audio_path).export(wav_path, format="wav")
 
     recognizer = sr.Recognizer()
     with sr.AudioFile(wav_path) as source:
+        recognizer.adjust_for_ambient_noise(source)
         audio_data = recognizer.record(source)
+
         try:
             text = recognizer.recognize_google(audio_data)
-            print("🗣️ Transcription:", text)
-            return text
+            clean_text = text.strip()
+            print("🗣️ Transcription:", clean_text)
+            return clean_text
+
         except sr.UnknownValueError:
-            print("⚠️ Speech not clear.")
             return "Could not understand the audio clearly."
+
         except sr.RequestError as e:
-            print("⚠️ Speech Recognition error:", e)
             return f"Speech Recognition error: {e}"
 
 
-# 🧠 Function: Generate AI Report using LLaMA (Ollama)
+# 🧠 Function: Generate AI Report (MAX 5 LINES)
 def generate_report(transcription):
     print("🧠 Generating business report with LLaMA...")
+
+    prompt = f"""
+Summarize the following transcript into a maximum of 5 short lines.
+Only include key business insights.
+Do NOT exceed 5 lines.
+Keep it clear, professional, and concise.
+
+Transcript:
+{transcription}
+"""
+
     try:
-        response = ollama.chat(model="llama3.2:1b", messages=[
-            {"role": "user", "content": f"Create a short business analysis report for: {transcription}"}
-        ])
-        result = response["message"]["content"]
-        print("📊 Report:", result)
-        return result
+        response = ollama.chat(
+            model="llama3.2:1b",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = response["message"]["content"].strip()
+
+        # HARD LIMIT: Max 5 lines
+        lines = result.split("\n")[:5]
+        final_result = "\n".join(lines)
+
+        print("📊 Report:", final_result)
+        return final_result
+
     except Exception as e:
-        print("⚠️ LLaMA error:", e)
         return f"Error generating report: {e}"
 
 
-# 🌍 Function: Translate report to French (Offline fallback)
+# 🌍 Function: Translate report to French (MAX 5 LINES)
 def translate_text(text, lang="fr"):
     print("🌍 Translating report to French...")
+
+    prompt = f"""
+Translate the following text into French.
+Limit output to a maximum of 5 short lines.
+Keep it clear and concise.
+
+Text:
+{text}
+"""
+
     try:
-        # simple offline translation fallback using ollama
-        response = ollama.chat(model="llama3.2:1b", messages=[
-            {"role": "user", "content": f"Translate this text to French:\n{text}"}
-        ])
-        result = response["message"]["content"]
-        print("✅ Translated Report:", result)
-        return result
+        response = ollama.chat(
+            model="llama3.2:1b",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        result = response["message"]["content"].strip()
+
+        # HARD LIMIT: Max 5 lines
+        lines = result.split("\n")[:5]
+        final_result = "\n".join(lines)
+
+        print("✅ Translated Report:", final_result)
+        return final_result
+
     except Exception as e:
-        print("⚠️ Translation error:", e)
         return f"Error translating text: {e}"
 
 
@@ -90,9 +126,11 @@ def analyze_audio():
 
     # Step 1: Transcription
     transcription = transcribe_audio(file_path)
-    # Step 2: Report Generation
+
+    # Step 2: AI Business Report (5 lines max)
     report = generate_report(transcription)
-    # Step 3: Translation
+
+    # Step 3: Translation (5 lines max)
     translated = translate_text(report, "fr")
 
     print("------------------------------------------")
@@ -103,6 +141,11 @@ def analyze_audio():
         "report": report,
         "translated_report": translated
     })
+
+
+@app.route("/")
+def home():
+    return "🚀 AI Reporter Backend Running Successfully!"
 
 
 if __name__ == "__main__":

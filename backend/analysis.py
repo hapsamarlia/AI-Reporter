@@ -2,20 +2,30 @@ import subprocess
 
 def generate_business_report(transcribed_text):
     prompt = f"""
-    Analyze the following business pitch and provide:
-    1. Summary
-    2. Market Viability
-    3. Key Insights
-    4. Improvements Needed
-    Text: {transcribed_text}
-    """
+Summarize the following transcript into a maximum of 5 short lines.
+Only include the most important business insights.
+Do NOT exceed 5 lines.
+Keep the summary clear and concise.
+
+Transcript:
+{transcribed_text}
+"""
+
     try:
         result = subprocess.run(
             ["ollama", "run", "llama3.2:1b", prompt],
             capture_output=True,
             text=True
         )
+
+        output = result.stdout.strip() if result.stdout else "No response from LLaMA."
+
+        # HARD LIMIT: Ensure max 5 lines
+        lines = output.split("\n")[:5]
+        final_output = "\n".join(lines)
+
         print("🧠 Report Generated")
-        return result.stdout.strip() if result.stdout else "No response from LLaMA."
+        return final_output
+
     except Exception as e:
         return f"Error running LLaMA model: {e}"

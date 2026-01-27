@@ -2,7 +2,7 @@ import os
 import speech_recognition as sr
 from pydub import AudioSegment
 
-# ✅ Force pydub to use the correct ffmpeg.exe path
+# ✅ Set FFmpeg path
 AudioSegment.converter = r"C:\ffmpeg\bin\ffmpeg.exe"
 AudioSegment.ffmpeg = r"C:\ffmpeg\bin\ffmpeg.exe"
 AudioSegment.ffprobe = r"C:\ffmpeg\bin\ffprobe.exe"
@@ -17,13 +17,20 @@ def transcribe_audio(audio_path):
         audio_path = wav_path
 
     r = sr.Recognizer()
+
     with sr.AudioFile(audio_path) as source:
+        r.adjust_for_ambient_noise(source)  # Improve accuracy
         audio_data = r.record(source)
+
         try:
             text = r.recognize_google(audio_data)
-            print("🗣️ Transcription:", text)
-            return text
+            clean_text = text.strip()
+
+            print("🗣️ Transcription:", clean_text)
+            return clean_text
+
         except sr.UnknownValueError:
-            return "Could not understand the audio clearly."
+            return "Audio unclear. Please upload a clearer recording."
+
         except sr.RequestError as e:
-            return f"Speech Recognition error: {e}"
+            return f"Speech Recognition API error: {e}"
