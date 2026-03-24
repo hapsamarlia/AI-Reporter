@@ -3,11 +3,11 @@ import axios from "axios";
 const API_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:5000";
 
 // 🎧 Upload Audio and Analyze
-export const uploadAudio = async (file) => {
+export const uploadAudio = async (file, language) => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("language", language);   // ✅ send selected language
 
-  // ✅ Use the correct backend route
   const res = await axios.post(`${API_URL}/analyze_audio`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });

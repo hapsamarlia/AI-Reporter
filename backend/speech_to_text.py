@@ -8,7 +8,7 @@ AudioSegment.ffmpeg = r"C:\ffmpeg\bin\ffmpeg.exe"
 AudioSegment.ffprobe = r"C:\ffmpeg\bin\ffprobe.exe"
 
 def transcribe_audio(audio_path):
-    # Convert MP3 → WAV if needed
+    # Convert MP3 → WAV if neededca
     if audio_path.endswith(".mp3"):
         print("🎧 Converting MP3 to WAV using FFmpeg...")
         sound = AudioSegment.from_mp3(audio_path)

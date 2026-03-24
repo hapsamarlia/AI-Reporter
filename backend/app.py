@@ -13,13 +13,12 @@ AudioSegment.converter = r"C:\ffmpeg\bin\ffmpeg.exe"
 AudioSegment.ffmpeg = r"C:\ffmpeg\bin\ffmpeg.exe"
 AudioSegment.ffprobe = r"C:\ffmpeg\bin\ffprobe.exe"
 
-# Folder to save uploaded files
 UPLOAD_FOLDER = "uploads"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 
-# 🎙️ Function: Convert + Transcribe Audio
+# 🎙️ Convert + Transcribe Audio
 def transcribe_audio(audio_path):
     print("🎧 Converting audio to WAV using FFmpeg...")
     wav_path = os.path.splitext(audio_path)[0] + ".wav"
@@ -43,7 +42,7 @@ def transcribe_audio(audio_path):
             return f"Speech Recognition error: {e}"
 
 
-# 🧠 Function: Generate AI Report (MAX 5 LINES)
+# 🧠 Generate AI Report
 def generate_report(transcription):
     print("🧠 Generating business report with LLaMA...")
 
@@ -51,7 +50,6 @@ def generate_report(transcription):
 Summarize the following transcript into a maximum of 5 short lines.
 Only include key business insights.
 Do NOT exceed 5 lines.
-Keep it clear, professional, and concise.
 
 Transcript:
 {transcription}
@@ -64,8 +62,6 @@ Transcript:
         )
 
         result = response["message"]["content"].strip()
-
-        # HARD LIMIT: Max 5 lines
         lines = result.split("\n")[:5]
         final_result = "\n".join(lines)
 
@@ -76,14 +72,14 @@ Transcript:
         return f"Error generating report: {e}"
 
 
-# 🌍 Function: Translate report to French (MAX 5 LINES)
-def translate_text(text, lang="fr"):
-    print("🌍 Translating report to French...")
+# 🌍 Translate Report (Dynamic Language)
+def translate_text(text, lang="French"):
+    print(f"🌍 Translating report to {lang}...")
 
     prompt = f"""
-Translate the following text into French.
-Limit output to a maximum of 5 short lines.
-Keep it clear and concise.
+Translate the following text into {lang}.
+Return ONLY the translated text.
+Maximum 5 short lines.
 
 Text:
 {text}
@@ -97,7 +93,6 @@ Text:
 
         result = response["message"]["content"].strip()
 
-        # HARD LIMIT: Max 5 lines
         lines = result.split("\n")[:5]
         final_result = "\n".join(lines)
 
@@ -108,7 +103,7 @@ Text:
         return f"Error translating text: {e}"
 
 
-# 🚀 Route: Handle audio upload + full processing
+# 🚀 Main API
 @app.route("/analyze_audio", methods=["POST"])
 def analyze_audio():
     if "file" not in request.files:
@@ -121,17 +116,21 @@ def analyze_audio():
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     file.save(file_path)
 
+    # ✅ Get language selected by user
+    language = request.form.get("language", "French")
+
     print(f"\n📁 Received file: {file.filename}")
+    print(f"🌍 Selected Language: {language}")
     print("------------------------------------------")
 
     # Step 1: Transcription
     transcription = transcribe_audio(file_path)
 
-    # Step 2: AI Business Report (5 lines max)
+    # Step 2: Generate Report
     report = generate_report(transcription)
 
-    # Step 3: Translation (5 lines max)
-    translated = translate_text(report, "fr")
+    # Step 3: Translate Report
+    translated = translate_text(report, language)
 
     print("------------------------------------------")
     print("✅ Process completed.\n")

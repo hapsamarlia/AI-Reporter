@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { uploadAudio } from "../api";
 import Loader from "./Loader";
 
-function UploadAudio({ setReportData }) {
+function UploadAudio({ setReportData, language }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -10,12 +10,14 @@ function UploadAudio({ setReportData }) {
     e.preventDefault();
     if (!file) return alert("Please select an audio file!");
     setLoading(true);
+
     try {
-      const data = await uploadAudio(file);
+      const data = await uploadAudio(file, language);  // ✅ language added
       setReportData(data);
     } catch (error) {
       alert("⚠️ Error processing audio! Check if backend is running.");
     }
+
     setLoading(false);
   };
 
@@ -30,6 +32,7 @@ function UploadAudio({ setReportData }) {
         />
         <button type="submit">Generate Report</button>
       </form>
+
       {loading && <Loader />}
     </div>
   );
